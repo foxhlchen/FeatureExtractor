@@ -3,6 +3,7 @@ import logging
 import time
 import extract_tool as et
 import task_agent as ta
+import feature_cache as fc
 
 logger = logging.getLogger()
 
@@ -58,6 +59,9 @@ def main():
 
     extractor = et.FeatureExtractor()
     task_agent = ta.TaskAgent(config)
+    feature_cache = fc.FeatureCache(config)
+
+    feature_cache.load_features()
 
     while True:
         elapsed = now() - last
