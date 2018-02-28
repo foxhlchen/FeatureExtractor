@@ -24,9 +24,9 @@ class OSSManager(object):
         bucket.get_object_to_file(path, local)
 
 
-
 if __name__ == '__main__':
     import configparser
+
     config = configparser.ConfigParser()
     config.read('config.ini')
     ossmgr = OSSManager(config)

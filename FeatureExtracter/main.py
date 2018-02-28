@@ -77,13 +77,13 @@ def main():
     init_logger(config)
     now = time.time
     last = 0
-    CHECK_INTERVAL = 1
+    CHECK_INTERVAL = 10
 
     extractor = et.FeatureExtractor()
     task_agent = ta.TaskAgent(config)
     feature_cache = fc.FeatureCache(config)
     oss_manager = om.OSSManager(config)
-    
+
     feature_cache.load_features()
 
     logger.info('program started.')
