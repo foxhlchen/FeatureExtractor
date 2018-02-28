@@ -1,12 +1,19 @@
 import oss2
+import logging
+
+logger = logging.getLogger()
 
 
 class OSSManager(object):
     def __init__(self, conf):
+        logger.info('OSS Manager Initializing...')
+
         self.access_key = conf['oss']['accesskey']
         self.access_secret = conf['oss']['accesssecret']
 
     def get_file(self, url, local):
+        logger.info('fetching file {} from oss to {}', url, local)
+
         auth = oss2.Auth(self.access_key, self.access_secret)
         info = oss2.urlparse(url)
         sep_loc = info.netloc.find('.')

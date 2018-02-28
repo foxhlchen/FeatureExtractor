@@ -2,15 +2,22 @@ from keras.preprocessing import image
 import keras
 import numpy as np
 import struct
+import logging
+
+logger = logging.getLogger()
 
 
 class FeatureExtractor(object):
 
     def __init__(self):
+        logger.info('FeatureExtractor Initializing...')
+
         self.model_ns = keras.applications.resnet50
         self.model = self.model_ns.ResNet50(weights='imagenet', include_top=False)
 
     def extract(self, img_path: str):
+        logger.info('extracting {}'.format(img_path))
+
         img = image.load_img(img_path, target_size=(224, 224))
         x = image.img_to_array(img)
         x = np.expand_dims(x, axis=0)

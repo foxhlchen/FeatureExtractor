@@ -5,7 +5,8 @@ import extract_tool as et
 import task_agent as ta
 import feature_cache as fc
 import oss_mgr as om
-
+from logging.handlers import RotatingFileHandler
+from logging import FileHandler
 
 logger = logging.getLogger()
 localfile = 'tmp.jpg'
@@ -52,20 +53,40 @@ def do_goods_tasks(extractor, task_agent, oss_manager):
         task_agent.update_goods_tasks(tasks)
 
 
+def init_logger(config):
+    framework_log_file = config.get('log', "main.logname")
+    filepath = config.get('log', 'path') if config.get('log', 'path').endswith('/') else config.get('log', 'path') + "/"
+    filepath += framework_log_file
+    fh = FileHandler(filepath)
+    fh = RotatingFileHandler(filepath, maxBytes=20 * 1024 * 1024, backupCount=10)
+
+    # 再创建一个handler，用于输出到控制台
+    ch = logging.StreamHandler()
+    formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    fh.setFormatter(formatter)
+    ch.setFormatter(formatter)
+
+    logger.addHandler(fh)
+    logger.addHandler(ch)
+    logger.setLevel(logging.DEBUG)
+
+
 def main():
     config = configparser.ConfigParser()
     config.read('config.ini')
+    init_logger(config)
     now = time.time
     last = 0
     CHECK_INTERVAL = 1
-
-    logger.info('program started.')
 
     extractor = et.FeatureExtractor()
     task_agent = ta.TaskAgent(config)
     feature_cache = fc.FeatureCache(config)
     oss_manager = om.OSSManager(config)
+    
     feature_cache.load_features()
+
+    logger.info('program started.')
 
     while True:
         elapsed = now() - last

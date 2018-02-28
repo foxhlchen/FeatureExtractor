@@ -19,6 +19,8 @@ class FeatureEntry(object):
 
 class FeatureCache(object):
     def __init__(self, conf):
+        logger.info('FeatureCache Initializing...')
+
         self.mysql_host = conf['mysql']['host']
         self.mysql_user = conf['mysql']['user']
         self.mysql_pw = conf['mysql']['pw']
@@ -57,14 +59,19 @@ class FeatureCache(object):
     def compare(self, task) -> list:
         #np.linalg.norm(result['35.jpg'] - result['30-1.jpg'])
 
-        X = [np.array(et.FeatureExtractor.unpack(task.pic_features))] + self.feature_arrays
-        nbrs = NearestNeighbors(n_neighbors=task.result_cnt, algorithm='auto').fit(X)
-        distances, indices = nbrs.kneighbors()
+        logger.info('Task file {} do comparing'.format(task.pic_url))
         result_list = []
-        for i in indices[0]:
-            entry = self.feature_entries[i]
-            rs = tg.SearchResult(entry.pic_url, distances[0][i], entry.goods_id, entry.company_id)
-            result_list.append(rs)
+
+        try:
+            X = [np.array(et.FeatureExtractor.unpack(task.pic_features))] + self.feature_arrays
+            nbrs = NearestNeighbors(n_neighbors=task.result_cnt, algorithm='auto').fit(X)
+            distances, indices = nbrs.kneighbors()
+            for i in indices[0]:
+                entry = self.feature_entries[i]
+                rs = tg.SearchResult(entry.pic_url, distances[0][i], entry.goods_id, entry.company_id)
+                result_list.append(rs)
+        except Exception as ex:
+            logger.error('Task file {} comparing failed - {}'.format(task.pic_url, str(ex)))
 
         return result_list
 
