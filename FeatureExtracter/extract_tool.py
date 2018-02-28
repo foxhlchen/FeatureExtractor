@@ -31,4 +31,3 @@ class FeatureExtractor(object):
     def unpack(feature_bytes: bytes) -> list:
         f_restore = struct.unpack('f' * 2048, feature_bytes)
         return list(f_restore)
-

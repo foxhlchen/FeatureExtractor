@@ -22,14 +22,14 @@ class GoodsTask(Task):
 
 
 class SearchTask(Task):
-    def __init__(self, search_id, status, pic_url):
+    def __init__(self, search_id, status, pic_url, result_cnt):
         Task.__init__(self)
 
         self.search_id = search_id
         self.status = status
         self.pic_url = pic_url
         self.pic_features = None
-
+        self.result_cnt = result_cnt
         # result
         self.result_list = []
 
@@ -120,14 +120,14 @@ class TaskAgent(object):
                                           database=self.mysql_db)
             cursor = cnx.cursor()
 
-            qry = 'SELECT id, status, search_pic_url FROM action_user_search_pic ' \
+            qry = 'SELECT id, status, search_pic_url result_cnt FROM action_user_search_pic ' \
                   'WHERE status = 1 ORDER BY action_time'
             cursor.execute(qry)
 
-            for i, (search_id, good_id, status, pic_url) in enumerate(cursor):
+            for i, (search_id, good_id, status, pic_url, result_cnt) in enumerate(cursor):
                 if i == 5:  # fetch max 10 tasks a time
                     break
-                pending_tasks.append(SearchTask(search_id, status, pic_url))
+                pending_tasks.append(SearchTask(search_id, status, pic_url, result_cnt))
 
             cursor.close()
             cnx.close()
