@@ -59,7 +59,7 @@ class TaskAgent(object):
                                           database=self.mysql_db)
             cursor = cnx.cursor()
 
-            qry = 'SELECT id, good_id, status, pic_url FROM m_good_pic_compute_job ' \
+            qry = 'SELECT id, good_id, status, pic_uri FROM m_good_pic_compute_job ' \
                   'WHERE status = 1 ORDER BY insert_time'
             cursor.execute(qry)
 
@@ -120,7 +120,7 @@ class TaskAgent(object):
                                           database=self.mysql_db)
             cursor = cnx.cursor()
 
-            qry = 'SELECT id, status, search_pic_url result_cnt FROM action_user_search_pic ' \
+            qry = 'SELECT id, status, search_pic_uri result_cnt FROM action_user_search_pic ' \
                   'WHERE status = 1 ORDER BY action_time'
             cursor.execute(qry)
 
@@ -146,7 +146,7 @@ class TaskAgent(object):
                                           database=self.mysql_db)
             cursor = cnx.cursor()
 
-            update_result = 'INSERT action_user_search_pic_result(search_id, result_pic_url, ' \
+            update_result = 'INSERT action_user_search_pic_result(search_id, result_pic_uri, ' \
                             'similarity_degree, goods_id, company_id) VALUES(%s, %s, %s, %s, %s)'
             update_job = 'UPDATE action_user_search_pic SET status = %s id = %s'
 

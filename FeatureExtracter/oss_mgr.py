@@ -9,6 +9,18 @@ class OSSManager(object):
     def get_file(self, url, local):
         auth = oss2.Auth(self.access_key, self.access_secret)
         info = oss2.urlparse(url)
-        bucket = oss2.Bucket(auth, '您的Endpoint', '您的Bucket名')
-        bucket.get_object_to_file('remote.txt', local)
+        sep_loc = info.netloc.find('.')
+        bucket_name = info.netloc[:sep_loc]
+        endpoint_name = info.netloc[sep_loc + 1:]
+        path = info.path[1:]
+        bucket = oss2.Bucket(auth, endpoint_name, bucket_name)
+        bucket.get_object_to_file(path, local)
 
+
+
+if __name__ == '__main__':
+    import configparser
+    config = configparser.ConfigParser()
+    config.read('config.ini')
+    ossmgr = OSSManager(config)
+    ossmgr.get_file('http://sxh-search-test.oss-cn-hangzhou.aliyuncs.com/34.jpg', 'tmp.jpg')

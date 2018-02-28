@@ -10,6 +10,7 @@ import oss_mgr as om
 logger = logging.getLogger()
 localfile = 'tmp.jpg'
 
+
 def do_extract(extractor, task, oss_manager):
     logger.info('extract good {} in task {}'.format(task.good_id, task.job_id))
 
@@ -25,6 +26,7 @@ def do_extract(extractor, task, oss_manager):
 def compare_result(task, feature_cache):
     result = feature_cache.compare(task)
     task.result_list = result
+
 
 def do_search_tasks(extractor, task_agent, oss_manager, feature_cache):
     tasks = task_agent.fetch_search_tasks()

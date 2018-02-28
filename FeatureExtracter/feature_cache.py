@@ -37,8 +37,8 @@ class FeatureCache(object):
                                           database=self.mysql_db)
             cursor = cnx.cursor()
 
-            qry = 'SELECT good_id, company_id, pic_url, pic_digits FROM m_good_info ' \
-                  ' ORDER BY insert_time'
+            qry = 'SELECT good_id, company_id, pic_uri, pic_digits FROM m_good_info ' \
+                  ' ORDER BY good_id'
             cursor.execute(qry)
 
             for i, (good_id, company_id, pic_url, pic_bytes) in enumerate(cursor):
