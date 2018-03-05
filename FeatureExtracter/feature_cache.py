@@ -44,9 +44,15 @@ class FeatureCache(object):
             cursor.execute(qry)
 
             for i, (good_id, company_id, pic_url, pic_bytes) in enumerate(cursor):
-                feature_np = np.array(et.FeatureExtractor.unpack(pic_bytes))
-                self.feature_entries.append(FeatureEntry(good_id, company_id, pic_url, feature_np))
-                self.feature_arrays.append(np.array(et.FeatureExtractor.unpack(feature_np)))
+                if pic_bytes is None:
+                    continue
+
+                try:
+                    feature_np = np.array(et.FeatureExtractor.unpack(pic_bytes))
+                    self.feature_entries.append(FeatureEntry(good_id, company_id, pic_url, feature_np))
+                    self.feature_arrays.append(feature_np)
+                except Exception as ex:
+                    logger.error('load goods_id {} feature error - {}'.format(good_id, str(ex)))
 
             cursor.close()
             cnx.close()

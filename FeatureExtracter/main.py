@@ -22,6 +22,14 @@ def do_extract(extractor, task, oss_manager):
 
     except Exception as ex:
         logger.error('extract failed good {} in task {}. {}'.format(task.good_id, task.job_id, str(ex)))
+        task.status = -100
+
+        if str(type(ex)).find("oss2") != -1:
+            task.status = -102
+        elif str(type(ex)).find("tensorflow") != -1:
+            task.status = -101
+        elif str(type(ex)).find("keras") != -1:
+            task.status = -101
 
 
 def compare_result(task, feature_cache):
@@ -49,8 +57,11 @@ def do_goods_tasks(extractor, task_agent, oss_manager):
     if len(tasks) > 0:
         for task in tasks:
             do_extract(extractor, task, oss_manager)
-
         task_agent.update_goods_tasks(tasks)
+
+        return True
+
+    return False
 
 
 def init_logger(config):
@@ -96,7 +107,8 @@ def main():
 
         if not do_search_tasks(extractor, task_agent, oss_manager, feature_cache):
             # only do goods task when idle
-            do_goods_tasks(extractor, task_agent, oss_manager)
+            if do_goods_tasks(extractor, task_agent, oss_manager):
+                feature_cache.load_features()
 
         last = now()
 

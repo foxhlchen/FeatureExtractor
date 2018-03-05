@@ -12,7 +12,7 @@ class OSSManager(object):
         self.access_secret = conf['oss']['accesssecret']
 
     def get_file(self, url, local):
-        logger.info('fetching file {} from oss to {}', url, local)
+        logger.info('fetching file {} from oss to {}'.format(url, local))
 
         auth = oss2.Auth(self.access_key, self.access_secret)
         info = oss2.urlparse(url)

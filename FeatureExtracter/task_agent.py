@@ -87,14 +87,13 @@ class TaskAgent(object):
             cursor = cnx.cursor()
 
             update_good = 'UPDATE m_good_info SET pic_digits = %s WHERE good_id = %s'
-            update_job = 'UPDATE m_good_pic_compute_job SET status = %s id = %s'
+            update_job = 'UPDATE m_good_pic_compute_job SET status = %s WHERE id = %s'
 
             cnt_done = 0
             for task in task_list:
-                if task.pic_features is None:
-                    continue
+                if task.pic_features is not None:
+                    cursor.execute(update_good, (task.pic_features, task.good_id))
 
-                cursor.execute(update_good, (task.pic_features, task.good_id))
                 cursor.execute(update_job, (task.status, task.job_id))
                 logger.debug('update goods task {} {}'.format(task.job_id, task.good_id))
 
@@ -148,7 +147,7 @@ class TaskAgent(object):
 
             update_result = 'INSERT action_user_search_pic_result(search_id, result_pic_uri, ' \
                             'similarity_degree, goods_id, company_id) VALUES(%s, %s, %s, %s, %s)'
-            update_job = 'UPDATE action_user_search_pic SET status = %s id = %s'
+            update_job = 'UPDATE action_user_search_pic SET status = %s WHERE id = %s'
 
             cnt_done = 0
             for task in task_list:
