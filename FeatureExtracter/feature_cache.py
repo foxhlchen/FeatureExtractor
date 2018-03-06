@@ -62,8 +62,38 @@ class FeatureCache(object):
         except Exception as ex:
             logger.error('load goods feature error - {}'.format(str(ex)))
 
+    def insert(self, task):
+        if task.pic_features is None:
+            return False
+        if task.status != 3:
+            return False
+        if task.company_id is None:
+            return False
+
+        logger.info('Insert feature cache task {}, pic_url {}'.format(task.id, task.pic_url))
+
+        try:
+            feature_np = np.array(et.FeatureExtractor.unpack(task.pic_features))
+            self.feature_entries.append(FeatureEntry(task.goods_id, task.company_id, task.pic_url, feature_np))
+            self.feature_arrays.append(feature_np)
+
+            return True
+        except Exception as ex:
+            logger.error('Insert feature cache {} error - {}'.format(task.__dict__, str(ex)))
+
+        return False
+
+    def insert_batch(self, tasklist: list):
+        logger.info('Insert feature cache batch... count {}, before cache count {}'.format(len(tasklist),
+                                                                                           len(self.feature_entries)))
+
+        for task in tasklist:
+            self.insert(task)
+
+        logger.info('Insert feature cache batch done. cache count now {}'.format(len(self.feature_entries)))
+
     def compare(self, task) -> list:
-        #np.linalg.norm(result['35.jpg'] - result['30-1.jpg'])
+        # np.linalg.norm(result['35.jpg'] - result['30-1.jpg'])
 
         logger.info('Task file {} do comparing'.format(task.pic_url))
         result_list = []
@@ -80,4 +110,3 @@ class FeatureCache(object):
             logger.error('Task file {} comparing failed - {}'.format(task.pic_url, str(ex)))
 
         return result_list
-

@@ -6,16 +6,19 @@ logger = logging.getLogger()
 
 class Task(object):
     def __init__(self):
+        self.id = 0
         self.status = 0
         self.pic_url = None
 
 
 class GoodsTask(Task):
-    def __init__(self, job_id, good_id, status, pic_url):
+    def __init__(self, job_id, good_id, company_id, status, pic_url):
         Task.__init__(self)
 
+        self.id = job_id
         self.job_id = job_id
-        self.good_id = good_id
+        self.goods_id = good_id
+        self.company_id = company_id
         self.status = status
         self.pic_url = pic_url
         self.pic_features = None
@@ -25,6 +28,7 @@ class SearchTask(Task):
     def __init__(self, search_id, status, pic_url, result_cnt):
         Task.__init__(self)
 
+        self.id = search_id
         self.search_id = search_id
         self.status = status
         self.pic_url = pic_url
@@ -59,15 +63,16 @@ class TaskAgent(object):
                                           database=self.mysql_db)
             cursor = cnx.cursor()
 
-            qry = 'SELECT id, good_id, status, pic_uri FROM m_good_pic_compute_job ' \
-                  'WHERE status = 1 ORDER BY insert_time'
+            qry = 'SELECT j.id, j.good_id, i.company_id, j.status, j.pic_uri FROM m_good_pic_compute_job j ' \
+                  'LEFT JOIN m_good_info i ON j.good_id = i.good_id ' \
+                  'WHERE j.status = 1 ORDER BY j.insert_time '
             cursor.execute(qry)
 
-            for i, (job_id, good_id, status, pic_url) in enumerate(cursor):
+            for i, (job_id, good_id, company_id, status, pic_url) in enumerate(cursor):
                 if i == 5:  # fetch max 10 tasks a time
                     break
 
-                pending_tasks.append(GoodsTask(job_id, good_id, status, pic_url))
+                pending_tasks.append(GoodsTask(job_id, good_id, company_id, status, pic_url))
 
             cursor.close()
             cnx.close()
@@ -92,10 +97,10 @@ class TaskAgent(object):
             cnt_done = 0
             for task in task_list:
                 if task.pic_features is not None:
-                    cursor.execute(update_good, (task.pic_features, task.good_id))
+                    cursor.execute(update_good, (task.pic_features, task.goods_id))
 
                 cursor.execute(update_job, (task.status, task.job_id))
-                logger.debug('update goods task {} {}'.format(task.job_id, task.good_id))
+                logger.debug('update goods task id:{}  goods_id:{}'.format(task.job_id, task.goods_id))
 
                 cnt_done += 1
 
@@ -106,8 +111,11 @@ class TaskAgent(object):
 
             logger.info('{} goods tasks were updated.'.format(cnt_done))
 
+            return True
         except Exception as ex:
             logger.error('update goods tasks error - {}'.format(str(ex)))
+
+        return False
 
     def fetch_search_tasks(self) -> list:
         pending_tasks = list()

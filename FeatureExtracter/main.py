@@ -13,15 +13,15 @@ localfile = 'tmp.jpg'
 
 
 def do_extract(extractor, task, oss_manager):
-    logger.info('extract good {} in task {}'.format(task.good_id, task.job_id))
+    logger.info('extract goods id {} from task {}'.format(task.goods_id, task.job_id))
 
     try:
         oss_manager.get_file(task.pic_url, localfile)
-        task.status = 3
         task.pic_features = extractor.extract_bytes(localfile)
+        task.status = 3
 
     except Exception as ex:
-        logger.error('extract failed good {} in task {}. {}'.format(task.good_id, task.job_id, str(ex)))
+        logger.error('extract failed goods id {} from task {}. {}'.format(task.goods_id, task.job_id, str(ex)))
         task.status = -100
 
         if str(type(ex)).find("oss2") != -1:
@@ -52,12 +52,13 @@ def do_search_tasks(extractor, task_agent, oss_manager, feature_cache):
         return False
 
 
-def do_goods_tasks(extractor, task_agent, oss_manager):
+def do_goods_tasks(extractor, task_agent, oss_manager, feature_cache):
     tasks = task_agent.fetch_goods_tasks()
     if len(tasks) > 0:
         for task in tasks:
             do_extract(extractor, task, oss_manager)
-        task_agent.update_goods_tasks(tasks)
+        if task_agent.update_goods_tasks(tasks):
+            feature_cache.insert_batch(tasks)
 
         return True
 
@@ -107,8 +108,7 @@ def main():
 
         if not do_search_tasks(extractor, task_agent, oss_manager, feature_cache):
             # only do goods task when idle
-            if do_goods_tasks(extractor, task_agent, oss_manager):
-                feature_cache.load_features()
+            do_goods_tasks(extractor, task_agent, oss_manager, feature_cache)
 
         last = now()
 
