@@ -102,11 +102,14 @@ class FeatureCache(object):
             X = [np.array(et.FeatureExtractor.unpack(task.pic_features))] + self.feature_arrays
             nbrs = NearestNeighbors(n_neighbors=task.result_cnt, algorithm='auto').fit(X)
             distances, indices = nbrs.kneighbors()
-            for i in indices[0]:
+            for idx, i in enumerate(indices[0]):
+                i -= 1  # remove source pic
                 entry = self.feature_entries[i]
-                rs = tg.SearchResult(entry.pic_url, distances[0][i], entry.goods_id, entry.company_id)
+                rs = tg.SearchResult(entry.pic_url, int(distances[0][idx]), entry.goods_id, entry.company_id)
                 result_list.append(rs)
         except Exception as ex:
+            result_list = []
+            task.status = -111
             logger.error('Task file {} comparing failed - {}'.format(task.pic_url, str(ex)))
 
         return result_list

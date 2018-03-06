@@ -13,7 +13,7 @@ localfile = 'tmp.jpg'
 
 
 def do_extract(extractor, task, oss_manager):
-    logger.info('extract goods id {} from task {}'.format(task.goods_id, task.job_id))
+    logger.info('extract pic {} from task {}'.format(task.pic_url, task.id))
 
     try:
         oss_manager.get_file(task.pic_url, localfile)
