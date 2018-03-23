@@ -90,7 +90,7 @@ def main():
     init_logger(config)
     now = time.time
     last = 0
-    CHECK_INTERVAL = 10
+    CHECK_INTERVAL = 600
 
     extractor = et.FeatureExtractor()
     redis_mgr = RedisManager(config)

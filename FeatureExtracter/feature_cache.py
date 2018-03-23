@@ -23,6 +23,7 @@ class FeatureCache(object):
         logger.info('FeatureCache Initializing...')
 
         self.mysql_host = conf['mysql']['host']
+        self.mysql_port = conf['mysql']['port']
         self.mysql_user = conf['mysql']['user']
         self.mysql_pw = conf['mysql']['pw']
         self.mysql_db = conf['mysql']['db']
@@ -37,7 +38,7 @@ class FeatureCache(object):
         try:
             cnx = mysql.connector.connect(user=self.mysql_user, password=self.mysql_pw,
                                           host=self.mysql_host,
-                                          database=self.mysql_db)
+                                          database=self.mysql_db, port=self.mysql_port)
             cursor = cnx.cursor()
 
             qry = 'SELECT good_id, company_id, pic_uri, pic_digits, product_type FROM m_good_info ' \
@@ -61,8 +62,8 @@ class FeatureCache(object):
 
             cursor.close()
             cnx.close()
-
-            logger.info('{} goods features loaded.'.format(len(self.feature_entries)))
+            count = sum([len(v) for v in self.feature_entries.values()])
+            logger.info('{} goods features loaded.'.format(count))
 
         except Exception as ex:
             logger.error('load goods feature error - {}'.format(str(ex)))
@@ -80,6 +81,9 @@ class FeatureCache(object):
         try:
             key = str(task.product_type)
             feature_np = np.array(et.FeatureExtractor.unpack(task.pic_features))
+            if key not in self.feature_entries:
+                self.feature_entries[key] = []
+                self.feature_arrays[key] = []
             self.feature_entries[key].append(FeatureEntry(task.goods_id, task.company_id, task.pic_url, feature_np))
             self.feature_arrays[key].append(feature_np)
 
@@ -90,13 +94,14 @@ class FeatureCache(object):
         return False
 
     def insert_batch(self, tasklist: list):
-        logger.info('Insert feature cache batch... count {}, before cache count {}'.format(len(tasklist),
-                                                                                           len(self.feature_entries)))
+        count = sum([len(v) for v in self.feature_entries.values()])
+        logger.info('Insert feature cache batch... count {}, before cache count {}'.format(len(tasklist), count))
 
         for task in tasklist:
             self.insert(task)
 
-        logger.info('Insert feature cache batch done. cache count now {}'.format(len(self.feature_entries)))
+        count = sum([len(v) for v in self.feature_entries.values()])
+        logger.info('Insert feature cache batch done. cache count now {}'.format(count))
 
     def compare(self, task) -> list:
         # np.linalg.norm(result['35.jpg'] - result['30-1.jpg'])

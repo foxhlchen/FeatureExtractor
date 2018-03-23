@@ -52,6 +52,7 @@ class SearchResult(object):
 class TaskAgent(object):
     def __init__(self, conf):
         self.mysql_host = conf['mysql']['host']
+        self.mysql_port = int(conf['mysql']['port'])
         self.mysql_user = conf['mysql']['user']
         self.mysql_pw = conf['mysql']['pw']
         self.mysql_db = conf['mysql']['db']
@@ -63,7 +64,7 @@ class TaskAgent(object):
         try:
             cnx = mysql.connector.connect(user=self.mysql_user, password=self.mysql_pw,
                                           host=self.mysql_host,
-                                          database=self.mysql_db)
+                                          database=self.mysql_db, port=self.mysql_port)
             cursor = cnx.cursor()
 
             qry = 'SELECT j.id, j.good_id, i.company_id, j.status, j.pic_uri, i.product_type FROM ' \
@@ -92,7 +93,7 @@ class TaskAgent(object):
         try:
             cnx = mysql.connector.connect(user=self.mysql_user, password=self.mysql_pw,
                                           host=self.mysql_host,
-                                          database=self.mysql_db)
+                                          database=self.mysql_db, port=self.mysql_port)
             cursor = cnx.cursor()
 
             update_good = 'UPDATE m_good_info SET pic_digits = %s WHERE good_id = %s'
@@ -128,7 +129,7 @@ class TaskAgent(object):
         try:
             cnx = mysql.connector.connect(user=self.mysql_user, password=self.mysql_pw,
                                           host=self.mysql_host,
-                                          database=self.mysql_db)
+                                          database=self.mysql_db, port=self.mysql_port)
             cursor = cnx.cursor()
 
             qry = 'SELECT id, status, search_pic_uri, result_cnt, product_type FROM action_user_search_pic ' \
@@ -154,7 +155,7 @@ class TaskAgent(object):
         try:
             cnx = mysql.connector.connect(user=self.mysql_user, password=self.mysql_pw,
                                           host=self.mysql_host,
-                                          database=self.mysql_db)
+                                          database=self.mysql_db, port=self.mysql_port)
             cursor = cnx.cursor()
 
             update_result = 'INSERT action_user_search_pic_result(search_id, result_pic_uri, ' \

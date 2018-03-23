@@ -6,13 +6,14 @@ class RedisManager(object):
         self.redis_host = conf['redis']['host']
         self.redis_port = conf['redis']['port']
         self.redis_db = conf['redis']['db']
-        self.redis_auth = conf['redis']['auth']
+        self.redis_auth = conf['redis']['auth'] if "auth" in conf['redis'] else None
         self.pool = None
         self.r = None
         self.p = None
 
     def connect(self):
-        self.pool = r.ConnectionPool(host=self.redis_host, port=int(self.redis_port), db=int(self.redis_db))
+        self.pool = r.ConnectionPool(host=self.redis_host, port=int(self.redis_port), db=int(self.redis_db),
+                                     password=self.redis_auth)
         self.r = r.Redis(connection_pool=self.pool)
         self.p = self.r.pubsub()
 
@@ -23,8 +24,8 @@ class RedisManager(object):
         self.p.unsubscribe()
 
     def listen(self):
-        return p.listen()
+        return self.p.listen()
 
     def get_message(self):
-        return p.get_message()
+        return self.p.get_message()
 
