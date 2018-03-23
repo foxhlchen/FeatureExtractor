@@ -10,11 +10,12 @@ logger = logging.getLogger()
 
 class FeatureEntry(object):
 
-    def __init__(self, goods_id, company_id, pic_url, feature_np):
+    def __init__(self, goods_id, company_id, pic_url, feature_np, product_type):
         self.goods_id = goods_id
         self.company_id = company_id
         self.pic_url = pic_url
         self.features_np = feature_np
+        self.product_type = product_type
 
 
 class FeatureCache(object):
@@ -25,8 +26,8 @@ class FeatureCache(object):
         self.mysql_user = conf['mysql']['user']
         self.mysql_pw = conf['mysql']['pw']
         self.mysql_db = conf['mysql']['db']
-        self.feature_entries = []
-        self.feature_arrays = []
+        self.feature_entries = dict()
+        self.feature_arrays = dict()
 
     def load_features(self):
         logger.info('loading goods features...')
@@ -39,18 +40,22 @@ class FeatureCache(object):
                                           database=self.mysql_db)
             cursor = cnx.cursor()
 
-            qry = 'SELECT good_id, company_id, pic_uri, pic_digits FROM m_good_info ' \
+            qry = 'SELECT good_id, company_id, pic_uri, pic_digits, product_type FROM m_good_info ' \
                   ' ORDER BY good_id'
             cursor.execute(qry)
 
-            for i, (good_id, company_id, pic_url, pic_bytes) in enumerate(cursor):
+            for i, (good_id, company_id, pic_url, pic_bytes, product_type) in enumerate(cursor):
                 if pic_bytes is None:
                     continue
 
                 try:
                     feature_np = np.array(et.FeatureExtractor.unpack(pic_bytes))
-                    self.feature_entries.append(FeatureEntry(good_id, company_id, pic_url, feature_np))
-                    self.feature_arrays.append(feature_np)
+                    key = str(product_type)
+                    if key not in self.feature_entries:
+                        self.feature_entries[key] = []
+                        self.feature_arrays[key] = []
+                    self.feature_entries[key].append(FeatureEntry(good_id, company_id, pic_url, feature_np, product_type))
+                    self.feature_arrays[key].append(feature_np)
                 except Exception as ex:
                     logger.error('load goods_id {} feature error - {}'.format(good_id, str(ex)))
 
@@ -73,13 +78,14 @@ class FeatureCache(object):
         logger.info('Insert feature cache task {}, pic_url {}'.format(task.id, task.pic_url))
 
         try:
+            key = str(task.product_type)
             feature_np = np.array(et.FeatureExtractor.unpack(task.pic_features))
-            self.feature_entries.append(FeatureEntry(task.goods_id, task.company_id, task.pic_url, feature_np))
-            self.feature_arrays.append(feature_np)
+            self.feature_entries[key].append(FeatureEntry(task.goods_id, task.company_id, task.pic_url, feature_np))
+            self.feature_arrays[key].append(feature_np)
 
             return True
         except Exception as ex:
-            logger.error('Insert feature cache {} error - {}'.format(task.__dict__, str(ex)))
+            logger.error('Insert feature cache {} error - {}'.format(task.id, str(ex)))
 
         return False
 
@@ -99,12 +105,13 @@ class FeatureCache(object):
         result_list = []
 
         try:
-            X = [np.array(et.FeatureExtractor.unpack(task.pic_features))] + self.feature_arrays
+            key = str(task.product_type)
+            X = [np.array(et.FeatureExtractor.unpack(task.pic_features))] + self.feature_arrays[key]
             nbrs = NearestNeighbors(n_neighbors=task.result_cnt, algorithm='auto').fit(X)
             distances, indices = nbrs.kneighbors()
             for idx, i in enumerate(indices[0]):
                 i -= 1  # remove source pic
-                entry = self.feature_entries[i]
+                entry = self.feature_entries[key][i]
                 rs = tg.SearchResult(entry.pic_url, int(distances[0][idx]), entry.goods_id, entry.company_id)
                 result_list.append(rs)
         except Exception as ex:

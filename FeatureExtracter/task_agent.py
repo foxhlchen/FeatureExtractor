@@ -9,10 +9,11 @@ class Task(object):
         self.id = 0
         self.status = 0
         self.pic_url = None
+        self.product_type = None
 
 
 class GoodsTask(Task):
-    def __init__(self, job_id, good_id, company_id, status, pic_url):
+    def __init__(self, job_id, good_id, company_id, status, pic_url, product_type):
         Task.__init__(self)
 
         self.id = job_id
@@ -20,12 +21,13 @@ class GoodsTask(Task):
         self.goods_id = good_id
         self.company_id = company_id
         self.status = status
+        self.product_type = product_type
         self.pic_url = pic_url
         self.pic_features = None
 
 
 class SearchTask(Task):
-    def __init__(self, search_id, status, pic_url, result_cnt):
+    def __init__(self, search_id, status, pic_url, result_cnt, product_type):
         Task.__init__(self)
 
         self.id = search_id
@@ -33,6 +35,7 @@ class SearchTask(Task):
         self.status = status
         self.pic_url = pic_url
         self.pic_features = None
+        self.product_type = product_type
         self.result_cnt = result_cnt
         # result
         self.result_list = []
@@ -63,16 +66,17 @@ class TaskAgent(object):
                                           database=self.mysql_db)
             cursor = cnx.cursor()
 
-            qry = 'SELECT j.id, j.good_id, i.company_id, j.status, j.pic_uri FROM m_good_pic_compute_job j ' \
+            qry = 'SELECT j.id, j.good_id, i.company_id, j.status, j.pic_uri, i.product_type FROM ' \
+                  'm_good_pic_compute_job j ' \
                   'LEFT JOIN m_good_info i ON j.good_id = i.good_id ' \
                   'WHERE j.status = 1 ORDER BY j.insert_time '
             cursor.execute(qry)
 
-            for i, (job_id, good_id, company_id, status, pic_url) in enumerate(cursor):
+            for i, (job_id, good_id, company_id, status, pic_url, product_type) in enumerate(cursor):
                 if i == 5:  # fetch max 10 tasks a time
                     break
 
-                pending_tasks.append(GoodsTask(job_id, good_id, company_id, status, pic_url))
+                pending_tasks.append(GoodsTask(job_id, good_id, company_id, status, pic_url, product_type))
 
             cursor.close()
             cnx.close()
@@ -127,14 +131,14 @@ class TaskAgent(object):
                                           database=self.mysql_db)
             cursor = cnx.cursor()
 
-            qry = 'SELECT id, status, search_pic_uri, result_cnt FROM action_user_search_pic ' \
+            qry = 'SELECT id, status, search_pic_uri, result_cnt, product_type FROM action_user_search_pic ' \
                   'WHERE status = 1 ORDER BY action_time'
             cursor.execute(qry)
 
-            for i, (search_id, status, pic_url, result_cnt) in enumerate(cursor):
+            for i, (search_id, status, pic_url, result_cnt, product_type) in enumerate(cursor):
                 if i == 5:  # fetch max 10 tasks a time
                     break
-                pending_tasks.append(SearchTask(search_id, status, pic_url, result_cnt))
+                pending_tasks.append(SearchTask(search_id, status, pic_url, result_cnt, product_type))
 
             cursor.close()
             cnx.close()

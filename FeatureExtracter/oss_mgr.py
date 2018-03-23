@@ -28,7 +28,7 @@ class OSSManager(object):
         logger.info('fetching file {} from oss to {}'.format(url, local))
 
         auth = oss2.Auth(self.access_key, self.access_secret)
-        info = oss2.urlparse(url)
+        url = url.replace('oss://', '')
         sep_loc = url.find('/')
         bucket_name = url[:sep_loc]
         endpoint_name = self.endpoint

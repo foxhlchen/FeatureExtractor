@@ -5,6 +5,7 @@ import extract_tool as et
 import task_agent as ta
 import feature_cache as fc
 import oss_mgr as om
+from redis_mgr import RedisManager
 from logging.handlers import RotatingFileHandler
 from logging import FileHandler
 
@@ -92,18 +93,21 @@ def main():
     CHECK_INTERVAL = 10
 
     extractor = et.FeatureExtractor()
+    redis_mgr = RedisManager(config)
     task_agent = ta.TaskAgent(config)
     feature_cache = fc.FeatureCache(config)
     oss_manager = om.OSSManager(config)
 
     feature_cache.load_features()
+    redis_mgr.connect()
+    redis_mgr.psub("ImageSearch-Action-*")
 
     logger.info('program started.')
 
     while True:
         elapsed = now() - last
-        if elapsed < CHECK_INTERVAL:
-            time.sleep(CHECK_INTERVAL - elapsed)
+        if elapsed < CHECK_INTERVAL and redis_mgr.get_message() is None:
+            time.sleep(0.01)
             continue
 
         if not do_search_tasks(extractor, task_agent, oss_manager, feature_cache):
