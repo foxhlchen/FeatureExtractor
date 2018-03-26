@@ -1,4 +1,5 @@
 import redis as r
+from redis import RedisError
 
 
 class RedisManager(object):

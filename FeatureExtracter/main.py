@@ -6,6 +6,7 @@ import task_agent as ta
 import feature_cache as fc
 import oss_mgr as om
 from redis_mgr import RedisManager
+from redis_mgr import RedisError
 from logging.handlers import RotatingFileHandler
 from logging import FileHandler
 
@@ -85,36 +86,44 @@ def init_logger(config):
 
 
 def main():
+    CHECK_INTERVAL = 600
     config = configparser.ConfigParser()
     config.read('config.ini')
     init_logger(config)
-    now = time.time
-    last = 0
-    CHECK_INTERVAL = 600
-
-    extractor = et.FeatureExtractor()
-    redis_mgr = RedisManager(config)
-    task_agent = ta.TaskAgent(config)
-    feature_cache = fc.FeatureCache(config)
-    oss_manager = om.OSSManager(config)
-
-    feature_cache.load_features()
-    redis_mgr.connect()
-    redis_mgr.psub("ImageSearch-Action-*")
-
-    logger.info('program started.')
 
     while True:
-        elapsed = now() - last
-        if elapsed < CHECK_INTERVAL and redis_mgr.get_message() is None:
-            time.sleep(0.01)
-            continue
+        try:
+            now = time.time
+            last = 0
 
-        if not do_search_tasks(extractor, task_agent, oss_manager, feature_cache):
-            # only do goods task when idle
-            do_goods_tasks(extractor, task_agent, oss_manager, feature_cache)
+            extractor = et.FeatureExtractor()
+            redis_mgr = RedisManager(config)
+            task_agent = ta.TaskAgent(config)
+            feature_cache = fc.FeatureCache(config)
+            oss_manager = om.OSSManager(config)
 
-        last = now()
+            feature_cache.load_features()
+            redis_mgr.connect()
+            redis_mgr.psub("ImageSearch-Action-*")
+
+            logger.info('program started.')
+
+            while True:
+                    elapsed = now() - last
+                    if elapsed < CHECK_INTERVAL and redis_mgr.get_message() is None:
+                        time.sleep(0.01)
+                        continue
+
+                    if not do_search_tasks(extractor, task_agent, oss_manager, feature_cache):
+                        # only do goods task when idle
+                        do_goods_tasks(extractor, task_agent, oss_manager, feature_cache)
+
+                    last = now()
+
+        except RedisError as ex:
+            logger.error('redis error: {}'.format(str(ex)))
+        except Exception as ex:
+            logger.error('unknown error: {}'.format(str(ex)))
 
 
 if __name__ == '__main__':
