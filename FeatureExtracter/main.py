@@ -104,7 +104,7 @@ def main():
 
             feature_cache.load_features()
             redis_mgr.connect()
-            redis_mgr.psub("ImageSearch-Action-*")
+            redis_mgr.psub("ImageSearch-Actions-*")
 
             logger.info('program started.')
 

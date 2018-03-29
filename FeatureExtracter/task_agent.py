@@ -64,7 +64,8 @@ class TaskAgent(object):
         try:
             cnx = mysql.connector.connect(user=self.mysql_user, password=self.mysql_pw,
                                           host=self.mysql_host,
-                                          database=self.mysql_db, port=self.mysql_port)
+                                          database=self.mysql_db, port=self.mysql_port, connection_timeout=10,
+                                          connect_timeout=10)
             cursor = cnx.cursor()
 
             qry = 'SELECT j.id, j.good_id, i.company_id, j.status, j.pic_uri, i.product_type FROM ' \
@@ -93,7 +94,8 @@ class TaskAgent(object):
         try:
             cnx = mysql.connector.connect(user=self.mysql_user, password=self.mysql_pw,
                                           host=self.mysql_host,
-                                          database=self.mysql_db, port=self.mysql_port)
+                                          database=self.mysql_db, port=self.mysql_port, connection_timeout=10,
+                                          connect_timeout=10)
             cursor = cnx.cursor()
 
             update_good = 'UPDATE m_good_info SET pic_digits = %s WHERE good_id = %s'
@@ -125,18 +127,27 @@ class TaskAgent(object):
     def fetch_search_tasks(self) -> list:
         pending_tasks = list()
         logger.info('fetching pending search tasks...')
+        result_cnt = 20
 
         try:
             cnx = mysql.connector.connect(user=self.mysql_user, password=self.mysql_pw,
                                           host=self.mysql_host,
-                                          database=self.mysql_db, port=self.mysql_port)
+                                          database=self.mysql_db, port=self.mysql_port, connection_timeout=10,
+                                          connect_timeout=10)
             cursor = cnx.cursor()
 
-            qry = 'SELECT id, status, search_pic_uri, result_cnt, product_type FROM action_user_search_pic ' \
+            qry = "SELECT value FROM conf_fextractor_search_settings WHERE `key` = 'search_cnt'"
+            cursor.execute(qry)
+            result_cnt = int(cursor.fetchone()[0])
+            cursor.close()
+
+            cursor = cnx.cursor()
+
+            qry = 'SELECT id, status, search_pic_uri, product_type FROM action_user_search_pic ' \
                   'WHERE status = 1 ORDER BY action_time'
             cursor.execute(qry)
 
-            for i, (search_id, status, pic_url, result_cnt, product_type) in enumerate(cursor):
+            for i, (search_id, status, pic_url, product_type) in enumerate(cursor):
                 if i == 5:  # fetch max 10 tasks a time
                     break
                 pending_tasks.append(SearchTask(search_id, status, pic_url, result_cnt, product_type))
@@ -155,12 +166,13 @@ class TaskAgent(object):
         try:
             cnx = mysql.connector.connect(user=self.mysql_user, password=self.mysql_pw,
                                           host=self.mysql_host,
-                                          database=self.mysql_db, port=self.mysql_port)
+                                          database=self.mysql_db, port=self.mysql_port, connection_timeout=10,
+                                          connect_timeout=10)
             cursor = cnx.cursor()
 
             update_result = 'INSERT action_user_search_pic_result(search_id, result_pic_uri, ' \
                             'similarity_degree, goods_id, company_id) VALUES(%s, %s, %s, %s, %s)'
-            update_job = 'UPDATE action_user_search_pic SET status = %s WHERE id = %s'
+            update_job = 'UPDATE action_user_search_pic SET status = %s, result_cnt = %s WHERE id = %s'
 
             cnt_done = 0
             for task in task_list:
@@ -169,7 +181,7 @@ class TaskAgent(object):
                                                    result.goods_id, result.company_id))
 
                 logger.debug('update search task {}'.format(task.search_id))
-                cursor.execute(update_job, (task.status, task.search_id))
+                cursor.execute(update_job, (task.status, task.result_cnt, task.search_id))
                 cnt_done += 1
 
             cnx.commit()

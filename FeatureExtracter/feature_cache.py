@@ -38,7 +38,8 @@ class FeatureCache(object):
         try:
             cnx = mysql.connector.connect(user=self.mysql_user, password=self.mysql_pw,
                                           host=self.mysql_host,
-                                          database=self.mysql_db, port=self.mysql_port)
+                                          database=self.mysql_db, port=self.mysql_port, connection_timeout=10,
+                                          connect_timeout=10)
             cursor = cnx.cursor()
 
             qry = 'SELECT good_id, company_id, pic_uri, pic_digits, product_type FROM m_good_info ' \
