@@ -85,7 +85,7 @@ class FeatureCache(object):
             if key not in self.feature_entries:
                 self.feature_entries[key] = []
                 self.feature_arrays[key] = []
-            self.feature_entries[key].append(FeatureEntry(task.goods_id, task.company_id, task.pic_url, feature_np))
+            self.feature_entries[key].append(FeatureEntry(task.goods_id, task.company_id, task.pic_url, feature_np, task.product_type))
             self.feature_arrays[key].append(feature_np)
 
             return True
