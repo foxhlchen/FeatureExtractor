@@ -90,6 +90,7 @@ def main():
     config = configparser.ConfigParser()
     config.read('config.ini')
     init_logger(config)
+    try_cnt = 0
 
     while True:
         try:
@@ -124,6 +125,13 @@ def main():
             logger.error('redis error: {}'.format(str(ex)))
         except Exception as ex:
             logger.error('unknown error: {}'.format(str(ex)))
+
+        time.sleep(10)
+        try_cnt += 1
+
+        if try_cnt > 5:
+            logger.error('exceeded max try limit, exit')
+            exit(-1)
 
 
 if __name__ == '__main__':

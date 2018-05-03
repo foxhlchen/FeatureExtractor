@@ -10,7 +10,8 @@ class Task(object):
         self.status = 0
         self.pic_url = None
         self.product_type = None
-
+        self.goods_id = -1
+        self.job_id = -1
 
 class GoodsTask(Task):
     def __init__(self, job_id, good_id, company_id, status, pic_url, product_type):
@@ -37,6 +38,7 @@ class SearchTask(Task):
         self.pic_features = None
         self.product_type = product_type
         self.result_cnt = result_cnt
+        self.job_id = 0 - self.search_id
         # result
         self.result_list = []
 
