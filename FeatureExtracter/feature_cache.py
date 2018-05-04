@@ -123,6 +123,6 @@ class FeatureCache(object):
         except Exception as ex:
             result_list = []
             task.status = -111
-            logger.error('Task file {} comparing failed - {}'.format(task.pic_url, str(ex)))
+            logger.error('Task file {} comparing failed - {} {}'.format(task.pic_url, str(type(ex)), str(ex)))
 
         return result_list

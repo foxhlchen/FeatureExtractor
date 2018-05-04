@@ -109,6 +109,14 @@ def main():
 
             logger.info('program started.')
 
+            logger.info('execute all pending search task...')
+            while do_search_tasks(extractor, task_agent, oss_manager, feature_cache):
+                pass
+
+            logger.info('execute all pending extraction task...')
+            while do_goods_tasks(extractor, task_agent, oss_manager, feature_cache):
+                pass
+
             while True:
                     elapsed = now() - last
                     if elapsed < CHECK_INTERVAL and redis_mgr.get_message() is None:

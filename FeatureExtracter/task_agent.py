@@ -77,7 +77,7 @@ class TaskAgent(object):
             cursor.execute(qry)
 
             for i, (job_id, good_id, company_id, status, pic_url, product_type) in enumerate(cursor):
-                if i == 5:  # fetch max 10 tasks a time
+                if i == 5:  # fetch max 5 tasks a time
                     break
 
                 pending_tasks.append(GoodsTask(job_id, good_id, company_id, status, pic_url, product_type))
@@ -150,7 +150,7 @@ class TaskAgent(object):
             cursor.execute(qry)
 
             for i, (search_id, status, pic_url, product_type) in enumerate(cursor):
-                if i == 5:  # fetch max 10 tasks a time
+                if i == 5:  # fetch max 5 tasks a time
                     break
                 pending_tasks.append(SearchTask(search_id, status, pic_url, result_cnt, product_type))
 
